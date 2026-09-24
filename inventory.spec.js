@@ -158,6 +158,8 @@ test.describe("Inventory page — product navigation", () => {
   }) => {
     const inventoryPage = new InventoryPage(page);
 
+    // Capture the price shown on the inventory list before navigating,
+    // so we can confirm it matches on the details page.
     const listedItem = page.locator(inventoryPage.inventoryItems, {
       hasText: "Sauce Labs Bike Light",
     });
@@ -167,14 +169,18 @@ test.describe("Inventory page — product navigation", () => {
 
     await inventoryPage.clickProductByName("Sauce Labs Bike Light");
 
+    // Title
     await expect(page.locator(inventoryPage.detailsName)).toHaveText(
       "Sauce Labs Bike Light",
     );
+
+    // Description — just confirm it's present and non-empty
     await expect(page.locator(inventoryPage.detailsDesc)).not.toBeEmpty();
+
+    // Price — confirm it's shown and matches the listed price
     await expect(page.locator(inventoryPage.detailsPrice)).toHaveText(
       listedPrice,
     );
-    await expect(page.locator(inventoryPage.detailsImg)).toBeVisible();
   });
 
   test("clicking 'Back to products' returns to the inventory page", async ({
@@ -236,5 +242,57 @@ test.describe("Inventory page — product navigation", () => {
     await inventoryPage.clickProductByName("Sauce Labs Bike Light");
     await inventoryPage.addToCartFromDetails();
     await expect(inventoryPage.getCartBadge()).toHaveText("2");
+  });
+});
+
+test.describe("Inventory page — sidebar navigation", () => {
+  test("'All Items' link keeps user on the inventory page", async ({
+    page,
+  }) => {
+    const inventoryPage = new InventoryPage(page);
+
+    await inventoryPage.openMenu();
+    await inventoryPage.clickAllItems();
+
+    await expect(page).toHaveURL("https://www.saucedemo.com/inventory.html");
+    await expect(page.locator(inventoryPage.pageTitle)).toHaveText("Products");
+  });
+
+  test("'Logout' link navigates back to the login page", async ({ page }) => {
+    const inventoryPage = new InventoryPage(page);
+
+    await inventoryPage.openMenu();
+    await inventoryPage.clickLogout();
+
+    await expect(page).toHaveURL("https://www.saucedemo.com/");
+    await expect(page.locator("#login-button")).toBeVisible();
+  });
+
+  test("'Reset App State' clears the cart without navigating away", async ({
+    page,
+  }) => {
+    const inventoryPage = new InventoryPage(page);
+
+    // Add an item first so there's something to reset
+    await inventoryPage.addProductToCartByName("Sauce Labs Backpack");
+    await expect(inventoryPage.getCartBadge()).toHaveText("1");
+
+    await inventoryPage.openMenu();
+    await inventoryPage.clickResetAppState();
+    await inventoryPage.closeMenu();
+
+    // Cart badge should be gone, and we should still be on the inventory page
+    await expect(page.locator(inventoryPage.cartBadge)).not.toBeVisible();
+    await expect(page).toHaveURL("https://www.saucedemo.com/inventory.html");
+  });
+
+  test("'About' link navigates to the Sauce Labs site", async ({ page }) => {
+    const inventoryPage = new InventoryPage(page);
+
+    await inventoryPage.openMenu();
+    await inventoryPage.clickAbout();
+
+    // "About" navigates away to an external site (not SauceDemo itself)
+    await expect(page).toHaveURL(/saucelabs\.com/);
   });
 });

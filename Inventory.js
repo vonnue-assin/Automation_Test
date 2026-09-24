@@ -8,6 +8,12 @@ class InventoryPage {
     this.cartBadge = ".shopping_cart_badge";
     this.menuButton = "#react-burger-menu-btn";
     this.menuCloseButton = "#react-burger-cross-btn";
+
+    // Sidebar navigation links
+    this.allItemsLink = "#inventory_sidebar_link";
+    this.aboutLink = "#about_sidebar_link";
+    this.logoutLink = "#logout_sidebar_link";
+    this.resetAppStateLink = "#reset_sidebar_link";
     this.pageTitle = ".title";
 
     // Sorting
@@ -39,6 +45,30 @@ class InventoryPage {
 
   async goto() {
     await this.page.goto("https://www.saucedemo.com/inventory.html");
+  }
+
+  async openMenu() {
+    await this.page.click(this.menuButton);
+  }
+
+  async closeMenu() {
+    await this.page.click(this.menuCloseButton);
+  }
+
+  async clickAllItems() {
+    await this.page.click(this.allItemsLink);
+  }
+
+  async clickAbout() {
+    await this.page.click(this.aboutLink);
+  }
+
+  async clickLogout() {
+    await this.page.click(this.logoutLink);
+  }
+
+  async clickResetAppState() {
+    await this.page.click(this.resetAppStateLink);
   }
 
   async sortBy(optionValue) {
