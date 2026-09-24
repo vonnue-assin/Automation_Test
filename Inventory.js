@@ -20,6 +20,15 @@ class InventoryPage {
     this.addToCartButtons = 'button[id^="add-to-cart-"]';
     this.removeButtons = 'button[id^="remove-"]';
 
+    // Product details page
+    this.detailsName = ".inventory_details_name";
+    this.detailsDesc = ".inventory_details_desc";
+    this.detailsPrice = ".inventory_details_price";
+    this.detailsImg = ".inventory_details_img";
+    this.backToProductsButton = 'button:has-text("Back to products")';
+    this.detailsAddToCartButton = 'button:has-text("Add to cart")';
+    this.detailsRemoveButton = 'button:has-text("Remove")';
+
     // Footer
     this.footer = ".footer";
     this.footerCopy = ".footer_copy";
@@ -46,6 +55,29 @@ class InventoryPage {
       .locator(this.inventoryItemPrices)
       .allTextContents();
     return priceTexts.map((price) => parseFloat(price.replace("$", "")));
+  }
+
+  async clickProductByName(productName) {
+    const item = this.page.locator(this.inventoryItems, {
+      hasText: productName,
+    });
+    await item.locator(this.inventoryItemNames).click();
+  }
+
+  async clickBackToProducts() {
+    await this.page.click(this.backToProductsButton);
+  }
+
+  getDetailsAddToCartButton() {
+    return this.page.locator(this.detailsAddToCartButton);
+  }
+
+  async addToCartFromDetails() {
+    await this.page.click(this.detailsAddToCartButton);
+  }
+
+  getDetailsRemoveButton() {
+    return this.page.locator(this.detailsRemoveButton);
   }
 
   async addProductToCartByName(productName) {

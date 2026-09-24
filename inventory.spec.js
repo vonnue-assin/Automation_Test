@@ -141,3 +141,100 @@ test.describe("Inventory page — add/remove from cart", () => {
     );
   });
 });
+
+test.describe("Inventory page — product navigation", () => {
+  test("clicking a product name navigates to its details page", async ({
+    page,
+  }) => {
+    const inventoryPage = new InventoryPage(page);
+
+    await inventoryPage.clickProductByName("Sauce Labs Backpack");
+
+    await expect(page).toHaveURL(/inventory-item\.html\?id=\d+/);
+  });
+
+  test("product details page shows correct title, description, and price", async ({
+    page,
+  }) => {
+    const inventoryPage = new InventoryPage(page);
+
+    const listedItem = page.locator(inventoryPage.inventoryItems, {
+      hasText: "Sauce Labs Bike Light",
+    });
+    const listedPrice = await listedItem
+      .locator(inventoryPage.inventoryItemPrices)
+      .textContent();
+
+    await inventoryPage.clickProductByName("Sauce Labs Bike Light");
+
+    await expect(page.locator(inventoryPage.detailsName)).toHaveText(
+      "Sauce Labs Bike Light",
+    );
+    await expect(page.locator(inventoryPage.detailsDesc)).not.toBeEmpty();
+    await expect(page.locator(inventoryPage.detailsPrice)).toHaveText(
+      listedPrice,
+    );
+    await expect(page.locator(inventoryPage.detailsImg)).toBeVisible();
+  });
+
+  test("clicking 'Back to products' returns to the inventory page", async ({
+    page,
+  }) => {
+    const inventoryPage = new InventoryPage(page);
+
+    await inventoryPage.clickProductByName("Sauce Labs Backpack");
+    await expect(page).toHaveURL(/inventory-item\.html\?id=\d+/);
+
+    await inventoryPage.clickBackToProducts();
+
+    await expect(page).toHaveURL("https://www.saucedemo.com/inventory.html");
+    await expect(page.locator(inventoryPage.pageTitle)).toHaveText("Products");
+  });
+
+  test("add to cart button is visible and adds product from details page", async ({
+    page,
+  }) => {
+    const inventoryPage = new InventoryPage(page);
+
+    await inventoryPage.clickProductByName("Sauce Labs Backpack");
+
+    // Button should be visible before clicking
+    await expect(inventoryPage.getDetailsAddToCartButton()).toBeVisible();
+
+    await inventoryPage.addToCartFromDetails();
+
+    // Cart badge should now show 1
+    await expect(inventoryPage.getCartBadge()).toBeVisible();
+    await expect(inventoryPage.getCartBadge()).toHaveText("1");
+
+    // Button should switch to "Remove" after adding
+    await expect(inventoryPage.getDetailsRemoveButton()).toBeVisible();
+
+    // Confirm the product actually shows up in the cart
+    await page.locator(inventoryPage.cartIcon).click();
+    await expect(page).toHaveURL("https://www.saucedemo.com/cart.html");
+    await expect(page.locator(".cart_item")).toContainText(
+      "Sauce Labs Backpack",
+    );
+  });
+
+  test("cart badge count increments correctly when adding from details page", async ({
+    page,
+  }) => {
+    const inventoryPage = new InventoryPage(page);
+
+    // No badge should be visible before anything is added
+    await expect(page.locator(inventoryPage.cartBadge)).not.toBeVisible();
+
+    // Add first product from its details page
+    await inventoryPage.clickProductByName("Sauce Labs Backpack");
+    await inventoryPage.addToCartFromDetails();
+    await expect(inventoryPage.getCartBadge()).toHaveText("1");
+
+    // Go back and add a second product from its details page
+    await inventoryPage.clickBackToProducts();
+    await inventoryPage.clickProductByName("Sauce Labs Bike Light");
+    await inventoryPage.addToCartFromDetails();
+    await expect(inventoryPage.getCartBadge()).toHaveText("2");
+  });
+});
